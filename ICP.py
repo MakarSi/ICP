@@ -1,9 +1,12 @@
 import copy
-
 import numpy as np
+import random
+
+from scipy import linalg
 
 import kdt
 from Point import Point
+
 from PointCloud import PointCloud
 
 
@@ -28,21 +31,21 @@ class ICP:
                  |    |   |
         target: [t1, t2, t3]
         """
-        if source.mass_center != Point() or target.mass_center != Point():
-            raise Exception(f"Point cloud mass center not in origin")
+        # if source.mass_center != Point() or target.mass_center != Point():
+        #     raise Exception(f"Point cloud mass center not in origin")
         source_matrix = source.get_matrix(by_rows=False)
         target_matrix = target.get_matrix(by_rows=True)
 
         S = np.matmul(source_matrix, target_matrix)
 
-        U, _, Vh = np.linalg.svd(S)
+        U, _, VT = np.linalg.svd(S)
 
-        return np.matmul(Vh.T, U.T)
+        return np.matmul(VT.T, U.T)
 
-    def iterative_closest_point(self, source: PointCloud, target: PointCloud) -> PointCloud:
+    def iterative_closest_point(self, source) -> PointCloud:
         # TODO: косяк со сдвигами
         temp_source = copy.deepcopy(source)
-        temp_source += target.mass_center - source.mass_center
+        temp_source += self.target.mass_center - source.mass_center
 
         # (dist, target_point, source_point)
         correspondence = [(*self.kd_tree.find_closest(p), p) for p in temp_source]
@@ -59,19 +62,39 @@ class ICP:
         new_target += new_target.mass_center
 
         rotation_matrix = self.find_rotation_matrix(new_source, new_target)
-        print(rotation_matrix)
 
-        # temp_source -= temp_source.mass_center
-        # temp_source.rotate(rotation_matrix)
-        # temp_source += source.mass_center
+        temp_source -= temp_source.mass_center
+        temp_source.rotate(rotation_matrix)
+        temp_source += self.target.mass_center
 
-        # return temp_source
+        return temp_source
+
+    def ICP_algorithm(self, iterations):
+        temp_source = self.source
+        for i in range(iterations):
+            temp_source = self.iterative_closest_point(temp_source)
+            print(self.calculate_penalty(temp_source))
+
+    def calculate_penalty(self, temp_source):
+        penalty = 0
+        for p in temp_source:
+            dist, _ = self.kd_tree.find_closest(p)
+            penalty += dist ** 2
+        return penalty / temp_source.length()
 
 
-source = PointCloud([Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)])
-# source_matrix = source.get_matrix(by_rows=False)
-# print(source_matrix)
-target = PointCloud([Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)])
-print(ICP.find_rotation_matrix(source, target))
-# ICP(source, target).iterative_closest_point(source, target)
-#     [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)] [Point(1, 1, 0), Point(1, 0, 1), Point(0, 1, 1), Point(-2, -2, -2)]
+points = [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0), Point(1, 1, 0),
+          Point(-1, -1, 0)]
+
+source = PointCloud(points)
+target = PointCloud(np.random.permutation(points))
+target = target.do_perturbation()
+
+print(source.get_matrix())
+print(target.get_matrix())
+
+ICP(source, target).ICP_algorithm(15)
+
+# tests
+# [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)]
+# [Point(1, 1, 0), Point(1, 0, 1), Point(0, 1, 1), Point(-2, -2, -2)]

@@ -14,12 +14,12 @@ class Point:
     def __add__(self, other: 'Point'):
         if type(other) is not self.__class__:
             raise Exception(f"other type {type(other)} is not {self.__class__}")
-        return Point(self._x + other._x, self._y + other._y, self._z + other._z)
+        return Point(self._x + other.x, self._y + other.y, self._z + other.z)
 
     def __sub__(self, other: 'Point'):
         if type(other) is not self.__class__:
             raise Exception(f"other type {type(other)} is not {self.__class__}")
-        return Point(self._x - other._x, self._y - other._y, self._z - other._z)
+        return Point(self._x - other.x, self._y - other.y, self._z - other.z)
 
     def __mul__(self, other: int | float):
         if type(other) not in [int, float]:

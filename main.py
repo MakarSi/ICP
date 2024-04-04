@@ -22,24 +22,15 @@ def read_ply_file(file_path):
 
 
 if __name__ == '__main__':
-    A = read_ply_file('tests/bun000.ply')
-    B = read_ply_file('tests/bun045.ply')
+    A = 30 * read_ply_file('tests/bun000.ply')
+    B = 30 * read_ply_file('tests/bun045.ply')
+    source = PointCloud([Point(p[0], p[1], p[2]) for p in A.tolist()[:5000]])
+    target = PointCloud([Point(p[0], p[1], p[2]) for p in B.tolist()[:5000]])
 
     fig = plt.figure(figsize=(15, 15))
     ax = plt.axes(projection='3d')
-    ax.set_xlabel('X (m)')
-    ax.set_ylabel('Y (m)')
-    ax.set_zlabel('Z (m)')
 
-    source = PointCloud([Point(p[0], p[1], p[2]) for p in A.tolist()[:40000]])
-    target = PointCloud([Point(p[0], p[1], p[2]) for p in B.tolist()[:40000]])
-
-    ax = plt.axes(projection='3d')
-
-    target.draw(ax, 'g')
-    source.draw(ax, 'k')
-    plt.show()
-
+    # points = np.array([[-2, -4, 0], [-1, -2, 0], [1, 2, 0], [2, 4, 0], [1, 1, 0], [1, 0, 1], [0, 1, 1], [2, -2, -2]])
 
     # target = PointCloud(
     #     [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0), Point(1, 1, 0),
@@ -47,9 +38,11 @@ if __name__ == '__main__':
     #
     # source_array = np.random.permutation(target.get_matrix())
     # source = PointCloud([Point(p[0], p[1], p[2]) for p in source_array]).do_perturbation()
-    #
-    # ICP(source, target).draw_steps(ax, 10, 1)
+
+    ICP(source, target).draw_steps(ax, 100, 0.1)
+    plt.show()
 
 # tests
 # [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)]
 # [Point(1, 1, 0), Point(1, 0, 1), Point(0, 1, 1), Point(-2, -2, -2)]
+# [Point(0, 0, 0), Point(3, 0, 0), Point(0, 3, 0), Point(3, 3, 0), Point(1.5, 1.5, 4)]

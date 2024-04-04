@@ -57,4 +57,4 @@ class Point:
         return self._z
 
     def draw(self, ax, color):
-        ax.scatter3D(self._x, self._y, self._z, color=color)
+        ax.scatter3D(self._x, self._y, self._z, color=color, s=0.1)

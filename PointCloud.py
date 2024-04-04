@@ -8,7 +8,7 @@ from Point import Point
 
 
 class PointCloud:
-    def __init__(self, points: List[Point]):
+    def __init__(self, points: List[Point] | np.array):
         self._points = points
 
     def rotate(self, rotation_matrix: np.array):
@@ -22,9 +22,9 @@ class PointCloud:
 
     # np.random.permutation ?
     def do_perturbation(self) -> 'PointCloud':
-        shift = np.array([random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)])
+        shift = np.array([random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1)])
         axis = np.array([random.uniform(-3, 3), random.uniform(-3, 3), random.uniform(-3, 3)])
-        angle = np.random.uniform(0, np.pi / 5)
+        angle = np.random.uniform(0, np.pi / 10)
 
         rotation_matrix = get_rotation_matrix(axis, angle)
 
@@ -77,8 +77,9 @@ class PointCloud:
         return len(self._points)
 
     def draw(self, ax, color):
-        for point in self._points:
-            point.draw(ax, color)
+        points_array = self.get_matrix().T
+
+        ax.scatter3D(*points_array, color=color)
 
 
 def get_rotation_matrix(axis, angle: float):

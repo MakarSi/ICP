@@ -3,6 +3,7 @@ import numpy as np
 import random
 
 from scipy import linalg
+from matplotlib import pyplot as plt
 
 import kdt
 from Point import Point
@@ -75,6 +76,17 @@ class ICP:
             temp_source = self.iterative_closest_point(temp_source)
             print(self.calculate_penalty(temp_source))
 
+    def draw_steps(self, ax, iterations, pause_time):
+        temp_source = self.source
+        for i in range(iterations):
+            temp_source = self.iterative_closest_point(temp_source)
+            temp_source.draw(ax, 'red')
+            self.target.draw(ax, 'green')
+
+            plt.pause(pause_time)
+            if i + 1 != iterations:
+                ax.cla()
+
     def calculate_penalty(self, temp_source):
         penalty = 0
         for p in temp_source:
@@ -82,19 +94,14 @@ class ICP:
             penalty += dist ** 2
         return penalty / temp_source.length()
 
-
-points = [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0), Point(1, 1, 0),
-          Point(-1, -1, 0)]
-
-source = PointCloud(points)
-target = PointCloud(np.random.permutation(points))
-target = target.do_perturbation()
-
-print(source.get_matrix())
-print(target.get_matrix())
-
-ICP(source, target).ICP_algorithm(15)
-
-# tests
-# [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)]
-# [Point(1, 1, 0), Point(1, 0, 1), Point(0, 1, 1), Point(-2, -2, -2)]
+# points = [Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0), Point(1, 1, 0),
+#           Point(-1, -1, 0)]
+#
+# source = PointCloud(points)
+# target = PointCloud(np.random.permutation(points))
+# target = target.do_perturbation()
+#
+# print(source.get_matrix())
+# print(target.get_matrix())
+#
+# ICP(source, target).ICP_algorithm(15)

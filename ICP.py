@@ -2,7 +2,6 @@ import copy
 import numpy as np
 import random
 
-from scipy import linalg
 from matplotlib import pyplot as plt
 
 import kdt
@@ -32,8 +31,6 @@ class ICP:
                  |    |   |
         target: [t1, t2, t3]
         """
-        # if source.mass_center != Point() or target.mass_center != Point():
-        #     raise Exception(f"Point cloud mass center not in origin")
         source_matrix = source.get_matrix(by_rows=False)
         target_matrix = target.get_matrix(by_rows=True)
 
@@ -44,11 +41,8 @@ class ICP:
         return np.matmul(VT.T, U.T)
 
     def iterative_closest_point(self, source) -> PointCloud:
-        # TODO: косяк со сдвигами
         temp_source = copy.deepcopy(source)
-        # temp_source += self.target.mass_center - source.mass_center
 
-        # (dist, target_point, source_point)
         correspondence = [(*self.kd_tree.find_closest(p), p) for p in temp_source]
         new_source = PointCloud([p[1] for p in correspondence])
 
@@ -56,58 +50,37 @@ class ICP:
 
         rotation_matrix = self.find_rotation_matrix(temp_source, new_source)
 
-        # temp_source -= temp_source.mass_center
         temp_source.rotate(rotation_matrix)
-        # temp_source += self.target.mass_center
 
         return temp_source
 
-    def ICP_algorithm(self, iterations):
+    def ICP_algorithm(self, iterations: int, show_penalty: bool = True):
         temp_source = self.source
         for i in range(iterations):
-            penalty = self.calculate_penalty(temp_source)
-            # if penalty <= 1e-6:
-            #     break
+            if show_penalty:
+                penalty = self.calculate_penalty(temp_source)
+                print(penalty)
             temp_source = self.iterative_closest_point(temp_source)
-            print(self.calculate_penalty(temp_source))
 
-    def draw_steps(self, ax, iterations, pause_time):
+    def draw_steps(self, ax, iterations: int, pause_time, show_penalty: bool = True):
         temp_source = self.source
         for i in range(iterations):
-            penalty = self.calculate_penalty(temp_source)
+            if show_penalty:
+                penalty = self.calculate_penalty(temp_source)
+                print(penalty)
 
             temp_source = self.iterative_closest_point(temp_source)
 
             temp_source.draw(ax, 'red')
             self.target.draw(ax, 'green')
 
-            print(penalty)
-
             plt.pause(pause_time)
             if i + 1 != iterations:
                 ax.cla()
-                ax.set_xlim(-3, 6)
-                ax.set_ylim(-3, 6)
-                ax.set_zlim(-3, 6)
 
-    def calculate_penalty(self, temp_source):
+    def calculate_penalty(self, temp_source: PointCloud):
         penalty = 0
         for p in temp_source:
             dist, _ = self.kd_tree.find_closest(p)
             penalty += dist ** 2
         return penalty / temp_source.length()
-
-# points = PointCloud([Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)])
-# target = PointCloud([Point(-2, -4, 0), Point(-1, -2, 0), Point(0, 0, 0), Point(1, 2, 0), Point(2, 4, 0)])
-
-# r = ICP.find_rotation_matrix(points, target)
-# print(r)
-#
-# source = PointCloud(points)
-# target = PointCloud(np.random.permutation(points))
-# target = target.do_perturbation()
-#
-# print(source.get_matrix())
-# print(target.get_matrix())
-#
-# ICP(source, target).ICP_algorithm(15)

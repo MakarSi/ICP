@@ -2,7 +2,7 @@ import numpy as np
 from typing import List
 from mpl_toolkits.mplot3d import Axes3D
 from Point import Point
-from src.Shape import Shape
+from Shape import Shape
 
 
 class PointCloud(Shape):
@@ -20,6 +20,9 @@ class PointCloud(Shape):
     @property
     def length(self) -> int:
         return len(self._points)
+
+    def sort(self):
+        self._points = sorted(self._points, key=lambda point: (point.x, point.y, point.z))
 
     def get_matrix(self, by_rows: bool = True) -> np.array:
         """
@@ -78,6 +81,9 @@ class PointCloud(Shape):
     def __iter__(self):
         for each in self._points:
             yield each
+
+    def __getitem__(self, item):
+        return self._points[item]
 
     def __str__(self):
         return "[" + ", ".join(str(point) for point in self._points) + "]"

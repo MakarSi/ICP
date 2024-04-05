@@ -1,13 +1,14 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from src.Shape import Shape
+from Shape import Shape
 
 
 class Point(Shape):
     """
     Точка в трехмерном пространстве.
     """
+
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
         self._x = x
         self._y = y
@@ -24,6 +25,11 @@ class Point(Shape):
     @property
     def z(self):
         return self._z
+
+    def distance(self, other: 'Point'):
+        return np.sqrt(
+            (other.x - self.x) * (other.x - self.x) + (other.y - self.y) * (other.y - self.y) + (other.z - self.z) * (
+                        other.z - self.z))
 
     def rotate(self, rotation_matrix: np.array):
         """

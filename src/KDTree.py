@@ -45,13 +45,39 @@ def p2nd_dist(p, nd: Node):
 
 
 class KDTree:
+    """
+    K-d дерево.
+    """
+
     def __init__(self):
         self.tr = [Node()] * 2
         self.l_tr, self.r_tr = [-1] * 2, [-1] * 2
 
     def build(self, cloud: PointCloud):
+        """
+        Построить K-d дерево по облаку точек.
+
+        Args:
+            cloud (PointCloud): облако точек.
+        """
         points = [[p.x, p.y, p.z] for p in cloud]
         self._build(points, 1, 0)
+
+    def find_closest(self, point: Point) -> Tuple[float, Point]:
+        """
+        Найти ближайшего соседа к точке.
+
+        Args:
+            point (Point): точка.
+
+        Returns:
+             Tuple[float, Point] - (расстояние до ближайшей точки, ближайшая точка).
+        """
+        pnt = [point.x, point.y, point.z]
+        min_dist = [inf, 0]
+        neib = [[0, 0, 0]]
+        self._find_closest(pnt, min_dist, neib)
+        return min_dist[0], Point(neib[0][0], neib[0][1], neib[0][2])
 
     def _build(self, pnts, tr_num, turn):
         n = len(pnts)
@@ -89,13 +115,6 @@ class KDTree:
             self.r_tr.append(-1)
             self.r_tr[tr_num] = len(self.tr) - 1
             self._build(r_pnts, self.r_tr[tr_num], (turn + 1) % 3)
-
-    def find_closest(self, point: Point) -> Tuple[float, Point]:
-        pnt = [point.x, point.y, point.z]
-        min_dist = [inf, 0]
-        neib = [[0, 0, 0]]
-        self._find_closest(pnt, min_dist, neib)
-        return min_dist[0], Point(neib[0][0], neib[0][1], neib[0][2])
 
     def _find_closest(self, pnt, min_dist, res, tr_num=1):
         min_dist[1] += 1

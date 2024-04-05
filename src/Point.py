@@ -1,15 +1,49 @@
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+
+from src.Shape import Shape
 
 
-class Point:
+class Point(Shape):
+    """
+    Точка в трехмерном пространстве.
+    """
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
         self._x = x
         self._y = y
         self._z = z
 
-    def rotate(self, rotation_matrix: np.matrix):
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def z(self):
+        return self._z
+
+    def rotate(self, rotation_matrix: np.array):
+        """
+        Повернуть объект.
+
+        Args:
+            rotation_matrix (np.array): матрица поворота.
+        """
         result = np.matmul(rotation_matrix, np.array([self._x, self._y, self._z]))
         self._x, self._y, self._z = result.item(0), result.item(1), result.item(2)
+
+    def draw(self, ax: Axes3D, color: str, size=0.1):
+        """
+        Отрисовать объект в matplotlib.
+
+        Args:
+            ax (Axes3D): оси matplotlib.
+            color (str): цвет объекта.
+        """
+        ax.scatter3D(self._x, self._y, self._z, color=color, s=size)
 
     def __add__(self, other: 'Point'):
         if type(other) is not self.__class__:
@@ -44,17 +78,5 @@ class Point:
     def __str__(self):
         return f"({self._x}, {self._y}, {self._z})"
 
-    @property
-    def x(self):
-        return self._x
-
-    @property
-    def y(self):
-        return self._y
-
-    @property
-    def z(self):
-        return self._z
-
-    def draw(self, ax, color):
-        ax.scatter3D(self._x, self._y, self._z, color=color, s=0.1)
+    def __repr__(self):
+        return f"({self._x}, {self._y}, {self._z})"

@@ -1,82 +1,42 @@
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
+from collections.abc import Iterable
+from typing import Type, List, Optional
+from abc import ABC
 
-from src.Shape import Shape
+
+class Point(ABC):
+    def __init__(self, coordinates: Optional[List[float]] = None):
+        self._coordinates = coordinates
+
+    @classmethod
+    def dimension(cls):
+        raise NotImplementedError
+
+    def distance(self, other: 'Point') -> float:
+        raise NotImplementedError
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __getitem__(self, item):
+        raise NotImplementedError
 
 
-class Point(Shape):
-    """
-    Точка в трехмерном пространстве.
-    """
-    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        self._x = x
-        self._y = y
-        self._z = z
+class PointContainer:
+    def __init__(self, points: List[Point]):
+        self._points: Iterable = points
 
-    @property
-    def x(self):
-        return self._x
+    @classmethod
+    def point_class(cls) -> Type[Point]:
+        raise NotImplementedError
 
-    @property
-    def y(self):
-        return self._y
+    def sort(self, key):
+        raise NotImplementedError
 
-    @property
-    def z(self):
-        return self._z
+    def __len__(self):
+        raise NotImplementedError
 
-    def rotate(self, rotation_matrix: np.array):
-        """
-        Повернуть объект.
+    def __iter__(self):
+        raise NotImplementedError
 
-        Args:
-            rotation_matrix (np.array): матрица поворота.
-        """
-        result = np.matmul(rotation_matrix, np.array([self._x, self._y, self._z]))
-        self._x, self._y, self._z = result.item(0), result.item(1), result.item(2)
-
-    def draw(self, ax: Axes3D, color: str, size=0.1):
-        """
-        Отрисовать объект в matplotlib.
-
-        Args:
-            ax (Axes3D): оси matplotlib.
-            color (str): цвет объекта.
-        """
-        ax.scatter3D(self._x, self._y, self._z, color=color, s=size)
-
-    def __add__(self, other: 'Point'):
-        if type(other) is not self.__class__:
-            raise Exception(f"other type {type(other)} is not {self.__class__}")
-        return Point(self._x + other.x, self._y + other.y, self._z + other.z)
-
-    def __sub__(self, other: 'Point'):
-        if type(other) is not self.__class__:
-            raise Exception(f"other type {type(other)} is not {self.__class__}")
-        return Point(self._x - other.x, self._y - other.y, self._z - other.z)
-
-    def __mul__(self, other: int | float):
-        if type(other) not in [int, float]:
-            raise Exception(f"other type {type(other)} is not {int} or {float}")
-        return Point(self._x * other, self._y * other, self._z * other)
-
-    def __rmul__(self, other: int | float):
-        if type(other) not in [int, float]:
-            raise Exception(f"other type {type(other)} is not {int} or {float}")
-        return Point(self._x * other, self._y * other, self._z * other)
-
-    def __truediv__(self, other: int | float):
-        if type(other) not in [int, float]:
-            raise Exception(f"other type {type(other)} is not {int} or {float}")
-        if other == 0:
-            raise Exception("Division by zero")
-        return Point(self._x / other, self._y / other, self._z / other)
-
-    def __eq__(self, other):
-        return self._x == other.x and self._y == other.y and self._z == other.z
-
-    def __str__(self):
-        return f"({self._x}, {self._y}, {self._z})"
-
-    def __repr__(self):
-        return f"({self._x}, {self._y}, {self._z})"
+    def __getitem__(self, item) -> Point | List[Point]:
+        raise NotImplementedError

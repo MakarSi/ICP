@@ -2,7 +2,7 @@ from typing import Optional
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import KDTree as kdt
+from KDTree import KDTree
 from PointCloud import PointCloud
 
 
@@ -27,7 +27,7 @@ class ICP:
         self._penalty_bound = penalty_bound
         self._max_iter = max_iter
 
-        self._kd_tree = kdt.KDTree()
+        self._kd_tree = KDTree(PointCloud)
         self._kd_tree.build(target)
 
     @property

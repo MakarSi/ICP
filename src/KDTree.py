@@ -1,47 +1,88 @@
-from typing import Tuple
+import itertools
+from recordtype import recordtype
+from typing import List, Tuple, Type
+from Point import Point, PointContainer
+from Point3D import Point3D
 
-import numpy as np
-import random as rd
-
-from Point import Point
-from PointCloud import PointCloud
-
-inf = 1e14
+MinMax = recordtype('MinMax', 'min max')
 
 
-class Node:
-    def __init__(self):
-        self.min_x = self.min_y = self.min_z = inf
-        self.max_x = self.max_y = self.max_z = -inf
+class BoundaryBox:
+    def __init__(self, cls: Type[Point], inf: float = 10e8):
+        """
+        Инициализировать boundary box.
 
-    def upd(self, pnt):
-        self.min_x = min(self.min_x, pnt[0])
-        self.max_x = max(self.max_x, pnt[0])
-        self.min_y = min(self.min_y, pnt[1])
-        self.max_y = max(self.max_y, pnt[1])
-        self.min_z = min(self.min_z, pnt[2])
-        self.max_z = max(self.max_z, pnt[2])
+        Args:
+            cls (Type[Point]): класс хранимых точек.
+            inf (float): бесконечно большое число, заведомо больше любой координаты точки.
+        """
+        if cls.dimension() < 1:
+            raise ValueError(f"Dimension {cls.dimension()} have to be >= 1")
+        self._dimension = cls.dimension()
+        self._bounds = [MinMax(inf, -inf) for _ in range(self._dimension)]
+        self._cls = cls
 
+    @property
+    def dimension(self):
+        return self._dimension
 
-def p2p_dist(p1, p2):
-    dx, dy, dz = p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]
-    return np.sqrt(dx * dx + dy * dy + dz * dz)
+    @property
+    def bounds(self):
+        return self._bounds
 
+    @property
+    def vertexes(self) -> List[Point]:
+        """
+        Вершины, образующие boundary box.
 
-def p2nd_dist(p, nd: Node):
-    if nd.min_x <= p[0] <= nd.max_x and nd.min_y <= p[1] <= nd.max_y and nd.min_z <= p[2] <= nd.max_z:
-        return 0
-    mn = min(p2p_dist(p, [nd.max_x, nd.max_y, nd.min_z]), p2p_dist(p, [nd.min_x, nd.max_y, nd.min_z]),
-             p2p_dist(p, [nd.max_x, nd.min_y, nd.min_z]), p2p_dist(p, [nd.min_x, nd.min_y, nd.min_z]),
-             p2p_dist(p, [nd.max_x, nd.max_y, nd.max_z]), p2p_dist(p, [nd.min_x, nd.max_y, nd.max_z]),
-             p2p_dist(p, [nd.max_x, nd.min_y, nd.max_z]), p2p_dist(p, [nd.min_x, nd.min_y, nd.max_z]))
-    if nd.min_x <= p[0] <= nd.max_x and nd.min_z <= p[2] <= nd.max_z:
-        mn = min(mn, abs(nd.min_y - p[1]), abs(nd.max_y - p[1]))
-    if nd.min_y <= p[1] <= nd.max_y and nd.min_z <= p[2] <= nd.max_z:
-        mn = min(mn, abs(nd.min_x - p[0]), abs(nd.max_x - p[0]))
-    if nd.min_y <= p[1] <= nd.max_y and nd.min_x <= p[0] <= nd.max_x:
-        mn = min(mn, abs(nd.min_z - p[2]), abs(nd.max_z - p[2]))
-    return mn
+        Returns:
+            List[Point]: вершины.
+        """
+        lst = [
+            [self._bounds[j].min if tool[j] else self._bounds[j].max for j in range(self._dimension)] for tool
+            in itertools.product([0, 1], repeat=self._dimension)]
+        return [self._cls(*obj) for obj in lst]
+
+    def update(self, point: Point):
+        """
+        Обновить с учетом добавленной точки.
+
+        Args:
+            point (Point): точка.
+        """
+        if type(point) != self._cls:
+            raise AttributeError(f"Point have to be {self._cls}")
+
+        for i, coordinate in enumerate(point):
+            self._bounds[i].min = min(self._bounds[i].min, coordinate)
+            self._bounds[i].max = max(self._bounds[i].max, coordinate)
+
+    def distance(self, point: Point) -> float:
+        """
+        Расстояние до точки
+
+        Args:
+            point (Point): точка.
+
+        Returns:
+            float- расстояние.
+        """
+        if type(point) != self._cls:
+            raise AttributeError(f"Point have to be {self._cls}")
+
+        # If point inside box then distance is 0
+        if all(self._bounds[i].min <= coord <= self._bounds[i].max for i, coord in enumerate(point)):
+            return 0
+
+        # Find min distance to vertexes
+        res = min(point.distance(vertex) for vertex in self.vertexes)
+
+        # Find min distance to faces
+        for i in range(self._dimension):
+            if all(self._bounds[j].min <= coord <= self._bounds[j].max for j, coord in enumerate(point) if i != j):
+                res = min(res, abs(self._bounds[i].min - point[i]), abs(self._bounds[i].max - point[i]))
+
+        return res
 
 
 class KDTree:
@@ -49,19 +90,69 @@ class KDTree:
     K-d дерево.
     """
 
-    def __init__(self):
-        self.tr = [Node()] * 2
-        self.l_tr, self.r_tr = [-1] * 2, [-1] * 2
-
-    def build(self, cloud: PointCloud):
+    def __init__(self, container_cls: Type[PointContainer], inf=10e8):
         """
-        Построить K-d дерево по облаку точек.
+        Инициализировать K-d дерево на основе контейнера точек.
 
         Args:
-            cloud (PointCloud): облако точек.
+            container_cls (Type[PointContainer]): класс контейнера точек.
+            inf (float): бесконечно большое число, заведомо больше любой координаты точки.
         """
-        points = [[p.x, p.y, p.z] for p in cloud]
-        self._build(points, 1, 0)
+
+        """
+        _container_cls - класс контейнера точек.
+        _cls - класс точек.
+        _dimension - размерность точек.
+        _inf - бесконечно большое число.
+        """
+        self._container_cls = container_cls
+        self._cls = container_cls.point_class()
+        self._dimension = container_cls.point_class().dimension()
+        self._inf = inf
+
+        self._tree = [BoundaryBox(self._cls, self._inf)] * 2
+        self._left_child_index, self._right_child_index = [-1] * 2, [-1] * 2
+
+    def _add_node(self):
+        """
+        Добавить пустую вершину к дереву.
+        """
+        self._tree.append(BoundaryBox(self._cls, self._inf))
+        self._left_child_index.append(-1)
+        self._right_child_index.append(-1)
+
+    def build(self, point_collection: PointContainer, tree_index: int = 1, coordinate: int = 0):
+        """
+        Построить дерево по коллекции точек
+
+        Args:
+            point_collection (PointContainer): коллекция точек.
+            tree_index (PointContainer): текущий индекс элемента дерева.
+            coordinate (int): координата точки на текущей итерации.
+        """
+        if point_collection.point_class() != self._cls:
+            raise AttributeError(f"Container have to contain {self._cls} objects")
+
+        for point in point_collection:
+            self._tree[tree_index].update(point)
+        if len(point_collection) <= 1:
+            return
+
+        point_collection.sort(key=lambda p: (p[coordinate]))
+
+        # Initialize left sub-tree
+        self._add_node()
+        self._left_child_index[tree_index] = len(self._tree) - 1
+        self.build(self._container_cls(point_collection[len(point_collection) // 2:]),
+                   self._left_child_index[tree_index],
+                   (coordinate + 1) % self._dimension)
+
+        # Initialize right sub-tree
+        self._add_node()
+        self._right_child_index[tree_index] = len(self._tree) - 1
+        self.build(self._container_cls(point_collection[:len(point_collection) // 2]),
+                   self._right_child_index[tree_index],
+                   (coordinate + 1) % self._dimension)
 
     def find_closest(self, point: Point) -> Tuple[float, Point]:
         """
@@ -73,62 +164,21 @@ class KDTree:
         Returns:
              Tuple[float, Point] - (расстояние до ближайшей точки, ближайшая точка).
         """
-        pnt = [point.x, point.y, point.z]
-        min_dist = [inf, 0]
-        neib = [[0, 0, 0]]
-        self._find_closest(pnt, min_dist, neib)
-        return min_dist[0], Point(neib[0][0], neib[0][1], neib[0][2])
 
-    def _build(self, pnts, tr_num, turn):
-        n = len(pnts)
-        for p in pnts:
-            self.tr[tr_num].upd(p)
-        if n == 1:
-            return
-        if turn == 1:
-            for i in range(n):
-                pnts[i][0], pnts[i][1] = pnts[i][1], pnts[i][0]
-        elif turn == 2:
-            for i in range(n):
-                pnts[i][0], pnts[i][2] = pnts[i][2], pnts[i][0]
-        pnts.sort()
-        if turn == 1:
-            for i in range(n):
-                pnts[i][0], pnts[i][1] = pnts[i][1], pnts[i][0]
-        elif turn == 2:
-            for i in range(n):
-                pnts[i][0], pnts[i][2] = pnts[i][2], pnts[i][0]
-        mid, l_pnts, r_pnts = n // 2, [], []
-        for i in range(mid):
-            l_pnts.append(pnts[i])
-        for i in range(mid, n):
-            r_pnts.append(pnts[i])
-        if len(l_pnts) > 0:
-            self.tr.append(Node())
-            self.l_tr.append(-1)
-            self.r_tr.append(-1)
-            self.l_tr[tr_num] = len(self.tr) - 1
-            self._build(l_pnts, self.l_tr[tr_num], (turn + 1) % 3)
-        if len(r_pnts) > 0:
-            self.tr.append(Node())
-            self.l_tr.append(-1)
-            self.r_tr.append(-1)
-            self.r_tr[tr_num] = len(self.tr) - 1
-            self._build(r_pnts, self.r_tr[tr_num], (turn + 1) % 3)
+        def _find_closest(tree_index=1):
+            nonlocal min_dist, res
+            if self._left_child_index[tree_index] == -1:
+                min_dist = self._tree[tree_index].distance(point)
+                res = self._cls(*[self._tree[tree_index].bounds[i].min for i in range(self._dimension)])
+                return
+            if self._tree[self._left_child_index[tree_index]].distance(point) < min_dist:
+                _find_closest(self._left_child_index[tree_index])
+            if self._tree[self._right_child_index[tree_index]].distance(point) < min_dist:
+                _find_closest(self._right_child_index[tree_index])
 
-    def _find_closest(self, pnt, min_dist, res, tr_num=1):
-        min_dist[1] += 1
-        if self.l_tr[tr_num] == -1:
-            min_dist[0] = p2nd_dist(pnt, self.tr[tr_num])
-            res[0] = [self.tr[tr_num].min_x, self.tr[tr_num].min_y, self.tr[tr_num].min_z]
-            return
-        if rd.randint(0, 1) == 0:
-            if p2nd_dist(pnt, self.tr[self.l_tr[tr_num]]) < min_dist[0]:
-                self._find_closest(pnt, min_dist, res, self.l_tr[tr_num])
-            if p2nd_dist(pnt, self.tr[self.r_tr[tr_num]]) < min_dist[0]:
-                self._find_closest(pnt, min_dist, res, self.r_tr[tr_num])
-        else:
-            if p2nd_dist(pnt, self.tr[self.r_tr[tr_num]]) < min_dist[0]:
-                self._find_closest(pnt, min_dist, res, self.r_tr[tr_num])
-            if p2nd_dist(pnt, self.tr[self.l_tr[tr_num]]) < min_dist[0]:
-                self._find_closest(pnt, min_dist, res, self.l_tr[tr_num])
+        if type(point) != self._cls:
+            raise AttributeError(f"Point have to be {self._cls}")
+        min_dist = self._inf
+        res = self._cls()
+        _find_closest()
+        return min_dist, res

@@ -1,18 +1,18 @@
 import numpy as np
-from typing import List
+from typing import List, Callable
 from mpl_toolkits.mplot3d import Axes3D
 from Point3D import Point3D
-from Shape import Shape
-from src.Metric import MetricContainer
+from Drawable import Drawable
+from src.Point import PointContainer
 
 
-class PointCloud(MetricContainer, Shape):
+class PointCloud(PointContainer, Drawable):
     """
     Облако точек в трехмерном пространстве.
     """
 
     def __init__(self, points: List[Point3D]):
-        self._points = points
+        super().__init__(points)
 
     @property
     def mass_center(self) -> Point3D:
@@ -23,10 +23,16 @@ class PointCloud(MetricContainer, Shape):
         return len(self._points)
 
     @classmethod
-    def metric_type(cls):
+    def point_class(cls):
         return Point3D
 
-    def sort(self, key=lambda point: (point.x, point.y, point.z)):
+    def sort(self, key: Callable = lambda point: (point.x, point.y, point.z)):
+        """
+        Сортировка коллекции по ключу.
+
+        Args:
+            key (Callable): метод сравнения точек.
+        """
         self._points = sorted(self._points, key=key)
 
     def get_matrix(self, by_rows: bool = True) -> np.array:
@@ -97,4 +103,4 @@ class PointCloud(MetricContainer, Shape):
         return "[" + ", ".join(str(point) for point in self._points) + "]"
 
     def __repr__(self):
-        return "[" + ", ".join(str(point) for point in self._points) + "]"
+        return "[" + ", ".join(point.__repr__() for point in self._points) + "]"

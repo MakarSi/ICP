@@ -1,17 +1,17 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from Metric import Metric
-from Shape import Shape
+from Point import Point
+from Drawable import Drawable
 
 
-class Point3D(Metric, Shape):
+class Point3D(Point, Drawable):
     """
     Точка в трехмерном пространстве.
     """
 
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        self._coordinates = [x, y, z]
+        super().__init__([x, y, z])
 
     @classmethod
     def dimension(cls):
@@ -30,6 +30,15 @@ class Point3D(Metric, Shape):
         return self._coordinates[2]
 
     def distance(self, other: 'Point3D') -> float:
+        """
+        Евклидово расстояние между точками.
+
+        Args:
+            other (Point3D): другая точка
+
+        Returns:
+            float: расстояние
+        """
         return np.sqrt(
             (other.x - self.x) * (other.x - self.x) + (other.y - self.y) * (other.y - self.y) + (other.z - self.z) * (
                     other.z - self.z))
@@ -94,7 +103,7 @@ class Point3D(Metric, Shape):
         return self._coordinates[item]
 
     def __str__(self):
-        return f"({self.x}, {self.y}, {self.z})"
+        return f"(x: {self.x}, y: {self.y}, z: {self.z})"
 
     def __repr__(self):
         return f"({self.x}, {self.y}, {self.z})"

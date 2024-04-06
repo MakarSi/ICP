@@ -2,9 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from plyfile import PlyData
 
+from ICP import ICP
 from Point3D import Point3D
 from PointCloud import PointCloud
-from ICP import ICP
 
 
 def read_ply_file(file_path: str) -> PointCloud:
@@ -30,8 +30,8 @@ def read_ply_file(file_path: str) -> PointCloud:
 
 
 if __name__ == '__main__':
-    source = read_ply_file('./tests/bun000_small.ply')
-    target = read_ply_file('./tests/bun045_small.ply')
+    source = read_ply_file('bun000_small.ply')
+    target = read_ply_file('bun045_small.ply')
 
     fig = plt.figure(figsize=(15, 15))
     ax = plt.axes(projection='3d')

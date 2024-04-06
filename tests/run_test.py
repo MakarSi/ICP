@@ -30,8 +30,8 @@ def read_ply_file(file_path: str) -> PointCloud:
 
 
 if __name__ == '__main__':
-    source = read_ply_file('bun000_small.ply')
-    target = read_ply_file('bun045_small.ply')
+    source = read_ply_file('data/bun000_small.ply')
+    target = read_ply_file('data/bun045_small.ply')
 
     fig = plt.figure(figsize=(15, 15))
     ax = plt.axes(projection='3d')

@@ -22,12 +22,12 @@ class PointCloud(MetricContainer, Shape):
     def length(self) -> int:
         return len(self._points)
 
-    @property
-    def metric_type(self):
+    @classmethod
+    def metric_type(cls):
         return Point3D
 
-    def sort(self):
-        self._points = sorted(self._points, key=lambda point: (point.x, point.y, point.z))
+    def sort(self, key=lambda point: (point.x, point.y, point.z)):
+        self._points = sorted(self._points, key=key)
 
     def get_matrix(self, by_rows: bool = True) -> np.array:
         """

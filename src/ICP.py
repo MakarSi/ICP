@@ -27,7 +27,7 @@ class ICP:
         self._penalty_bound = penalty_bound
         self._max_iter = max_iter
 
-        self._kd_tree = kdt.KDTree()
+        self._kd_tree = kdt.KDTree(PointCloud)
         self._kd_tree.build(target)
 
     @property

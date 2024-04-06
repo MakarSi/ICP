@@ -21,7 +21,7 @@ class MetricContainer(metaclass=ABCMeta):
     def metric_type(self) -> Metric:
         raise NotImplementedError
 
-    def sort(self):
+    def sort(self, key):
         raise NotImplementedError
 
     def __len__(self):

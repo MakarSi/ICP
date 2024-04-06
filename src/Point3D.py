@@ -1,8 +1,8 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from src.Metric import Metric
-from src.Shape import Shape
+from Metric import Metric
+from Shape import Shape
 
 
 class Point3D(Metric, Shape):

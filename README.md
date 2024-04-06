@@ -1,6 +1,6 @@
 # Итеративный алгоритм ближайших точек
 
-В _tesst/run_test.py_ расположен тестовый запуск алгоритма на основе 3D-сканов, взятых из [The Stanford 3D Scanning Repository](https://graphics.stanford.edu/data/3Dscanrep/).
+В _tests/run_test.py_ расположен тестовый запуск алгоритма на основе 3D-сканов, взятых из [The Stanford 3D Scanning Repository](https://graphics.stanford.edu/data/3Dscanrep/).
 
 Для сканов использовался препроцессинг, уменьшающий число точек (скрипт расположен в _tests/script.py_).
 

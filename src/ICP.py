@@ -2,7 +2,7 @@ from typing import Optional
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import KDTree2 as kdt
+import KDTree as kdt
 from PointCloud import PointCloud
 
 

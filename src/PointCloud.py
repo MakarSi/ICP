@@ -1,25 +1,30 @@
 import numpy as np
 from typing import List
 from mpl_toolkits.mplot3d import Axes3D
-from Point import Point
+from Point3D import Point3D
 from Shape import Shape
+from src.Metric import MetricContainer
 
 
-class PointCloud(Shape):
+class PointCloud(MetricContainer, Shape):
     """
     Облако точек в трехмерном пространстве.
     """
 
-    def __init__(self, points: List[Point]):
+    def __init__(self, points: List[Point3D]):
         self._points = points
 
     @property
-    def mass_center(self) -> Point:
-        return sum(self._points, Point()) / len(self._points)
+    def mass_center(self) -> Point3D:
+        return sum(self._points, Point3D()) / len(self._points)
 
     @property
     def length(self) -> int:
         return len(self._points)
+
+    @property
+    def metric_type(self):
+        return Point3D
 
     def sort(self):
         self._points = sorted(self._points, key=lambda point: (point.x, point.y, point.z))
@@ -68,14 +73,14 @@ class PointCloud(Shape):
             raise Exception(f"other type {type(other)} is not {int} or {float}")
         return PointCloud([point * other for point in self._points])
 
-    def __add__(self, other: Point):
-        if type(other) is not Point:
-            raise Exception(f"other type {type(other)} is not {Point}")
+    def __add__(self, other: Point3D):
+        if type(other) is not Point3D:
+            raise Exception(f"other type {type(other)} is not {Point3D}")
         return PointCloud([point + other for point in self._points])
 
-    def __sub__(self, other: Point):
-        if type(other) is not Point:
-            raise Exception(f"other type {type(other)} is not {Point}")
+    def __sub__(self, other: Point3D):
+        if type(other) is not Point3D:
+            raise Exception(f"other type {type(other)} is not {Point3D}")
         return PointCloud([point - other for point in self._points])
 
     def __iter__(self):
@@ -84,6 +89,9 @@ class PointCloud(Shape):
 
     def __getitem__(self, item):
         return self._points[item]
+
+    def __len__(self):
+        return len(self._points)
 
     def __str__(self):
         return "[" + ", ".join(str(point) for point in self._points) + "]"

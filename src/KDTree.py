@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 import random as rd
 
-from Point import Point
+from Point3D import Point3D
 from PointCloud import PointCloud
 
 inf = 1e14
@@ -63,12 +63,12 @@ class KDTree:
         points = [[p.x, p.y, p.z] for p in cloud]
         self._build(points, 1, 0)
 
-    def find_closest(self, point: Point) -> Tuple[float, Point]:
+    def find_closest(self, point: Point3D) -> Tuple[float, Point3D]:
         """
         Найти ближайшего соседа к точке.
 
         Args:
-            point (Point): точка.
+            point (Point3D): точка.
 
         Returns:
              Tuple[float, Point] - (расстояние до ближайшей точки, ближайшая точка).
@@ -77,7 +77,7 @@ class KDTree:
         min_dist = [inf, 0]
         neib = [[0, 0, 0]]
         self._find_closest(pnt, min_dist, neib)
-        return min_dist[0], Point(neib[0][0], neib[0][1], neib[0][2])
+        return min_dist[0], Point3D(neib[0][0], neib[0][1], neib[0][2])
 
     def _build(self, pnts, tr_num, turn):
         n = len(pnts)

@@ -1,35 +1,38 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from Shape import Shape
+from src.Metric import Metric
+from src.Shape import Shape
 
 
-class Point(Shape):
+class Point3D(Metric, Shape):
     """
     Точка в трехмерном пространстве.
     """
 
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
-        self._x = x
-        self._y = y
-        self._z = z
+        self._coordinates = [x, y, z]
+
+    @classmethod
+    def dimension(cls):
+        return 3
 
     @property
     def x(self):
-        return self._x
+        return self._coordinates[0]
 
     @property
     def y(self):
-        return self._y
+        return self._coordinates[1]
 
     @property
     def z(self):
-        return self._z
+        return self._coordinates[2]
 
-    def distance(self, other: 'Point'):
+    def distance(self, other: 'Point3D') -> float:
         return np.sqrt(
             (other.x - self.x) * (other.x - self.x) + (other.y - self.y) * (other.y - self.y) + (other.z - self.z) * (
-                        other.z - self.z))
+                    other.z - self.z))
 
     def rotate(self, rotation_matrix: np.array):
         """
@@ -38,51 +41,60 @@ class Point(Shape):
         Args:
             rotation_matrix (np.array): матрица поворота.
         """
-        result = np.matmul(rotation_matrix, np.array([self._x, self._y, self._z]))
-        self._x, self._y, self._z = result.item(0), result.item(1), result.item(2)
+        result = np.matmul(rotation_matrix, np.array([self.x, self.y, self.z]))
+        self._coordinates[0], self._coordinates[1], self._coordinates[2] = result.item(0), result.item(1), result.item(
+            2)
 
-    def draw(self, ax: Axes3D, color: str, size=0.1):
+    def draw(self, ax: Axes3D, color: str, size: float = 0.1):
         """
         Отрисовать объект в matplotlib.
 
         Args:
             ax (Axes3D): оси matplotlib.
             color (str): цвет объекта.
+            size (float): толщина.
         """
-        ax.scatter3D(self._x, self._y, self._z, color=color, s=size)
+        ax.scatter3D(self.x, self.y, self.z, color=color, s=size)
 
-    def __add__(self, other: 'Point'):
+    def __add__(self, other: 'Point3D'):
         if type(other) is not self.__class__:
             raise Exception(f"other type {type(other)} is not {self.__class__}")
-        return Point(self._x + other.x, self._y + other.y, self._z + other.z)
+        return Point3D(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def __sub__(self, other: 'Point'):
+    def __sub__(self, other: 'Point3D'):
         if type(other) is not self.__class__:
             raise Exception(f"other type {type(other)} is not {self.__class__}")
-        return Point(self._x - other.x, self._y - other.y, self._z - other.z)
+        return Point3D(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __mul__(self, other: int | float):
         if type(other) not in [int, float]:
             raise Exception(f"other type {type(other)} is not {int} or {float}")
-        return Point(self._x * other, self._y * other, self._z * other)
+        return Point3D(self.x * other, self.y * other, self.z * other)
 
     def __rmul__(self, other: int | float):
         if type(other) not in [int, float]:
             raise Exception(f"other type {type(other)} is not {int} or {float}")
-        return Point(self._x * other, self._y * other, self._z * other)
+        return Point3D(self.x * other, self.y * other, self.z * other)
 
     def __truediv__(self, other: int | float):
         if type(other) not in [int, float]:
             raise Exception(f"other type {type(other)} is not {int} or {float}")
         if other == 0:
             raise Exception("Division by zero")
-        return Point(self._x / other, self._y / other, self._z / other)
+        return Point3D(self.x / other, self.y / other, self.z / other)
 
     def __eq__(self, other):
-        return self._x == other.x and self._y == other.y and self._z == other.z
+        return self.x == other.x and self.y == other.y and self.z == other.z
+
+    def __iter__(self):
+        for each in self._coordinates:
+            yield each
+
+    def __getitem__(self, item):
+        return self._coordinates[item]
 
     def __str__(self):
-        return f"({self._x}, {self._y}, {self._z})"
+        return f"({self.x}, {self.y}, {self.z})"
 
     def __repr__(self):
-        return f"({self._x}, {self._y}, {self._z})"
+        return f"({self.x}, {self.y}, {self.z})"

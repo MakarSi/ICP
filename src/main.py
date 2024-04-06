@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from plyfile import PlyData
 
-from Point import Point
+from Point3D import Point3D
 from PointCloud import PointCloud
 from ICP import ICP
 
@@ -25,7 +25,7 @@ def read_ply_file(file_path: str) -> PointCloud:
     z = vertices['z']
 
     points = np.vstack((x, y, z)).T
-    points = PointCloud([Point(p[0], p[1], p[2]) for p in points.tolist()])
+    points = PointCloud([Point3D(p[0], p[1], p[2]) for p in points.tolist()])
     return points
 
 
